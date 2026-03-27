@@ -1,138 +1,111 @@
 # Reddit Post Virality Dataset
 
-A dataset of 1,656 Reddit posts collected via the Reddit API (PRAW), designed for predicting post score (virality) using text features, timing, author metadata, and subreddit statistics.
+## Dataset Overview
+This dataset contains analytics data for 1,656 Reddit posts collected from the Reddit API, including engagement metrics, text features, author statistics, subreddit characteristics, and virality indicators.
 
----
+### Dataset Shape
+- Records: 1,656 rows (posts)
+- Features: 39 columns
+- Format: CSV
 
-## Overview
+## Data Description
 
-| Property | Value |
-|---|---|
-| Total posts | 1,656 |
-| Subreddits | 12 |
-| Features | 39 |
-| Target variable | `log_score` (log1p of upvote score) |
-| Task type | Regression / Classification |
-| Collection method | Reddit API via PRAW |
-| Collection date | March 2026 |
+### Features
+| Column Name | Data Type | Description |
+|-------------|-----------|-------------|
+| post_id | string | Unique Reddit identifier for the post |
+| title | string | Post title text |
+| subreddit | string | Subreddit the post was submitted to |
+| post_type | string | Type of post: `self` (text) or `link` |
+| score | integer | Raw upvote score at time of collection |
+| log_score | float | log1p(score) — primary regression target |
+| num_comments | integer | Total number of comments on the post |
+| upvote_ratio | float | Fraction of upvotes vs total votes (0–1) |
+| is_original_content | integer | Binary indicator if post is marked as OC (0/1) |
+| over_18 | integer | Binary indicator if post is marked NSFW (0/1) |
+| has_flair | integer | Binary indicator if post has a flair tag (0/1) |
+| title_length | integer | Character count of the post title |
+| title_word_count | integer | Word count of the post title |
+| body_length | integer | Character count of the post body |
+| body_word_count | integer | Word count of the post body |
+| has_body | integer | Binary indicator if post has a text body (0/1) |
+| num_question_marks | integer | Count of `?` characters in title and body |
+| num_exclamations | integer | Count of `!` characters in title and body |
+| num_urls | integer | Count of URLs in the post body |
+| title_uppercase_ratio | float | Fraction of uppercase characters in the title |
+| is_question_title | integer | Binary indicator if title ends with `?` (0/1) |
+| post_hour_utc | integer | Hour of posting in UTC (0–23) |
+| post_day_of_week | integer | Day of week at posting time (0=Monday, 6=Sunday) |
+| post_age_hours | float | Hours elapsed between posting and collection |
+| created_utc | float | Unix timestamp of post creation |
+| subreddit_subscribers | integer | Subscriber count of the subreddit at collection time |
+| subreddit_created_utc | float | Unix timestamp of subreddit creation |
+| subreddit_age_days | float | Age of the subreddit in days |
+| author_comment_karma | integer | Author's total comment karma |
+| author_link_karma | integer | Author's total link karma |
+| author_account_age_days | float | Age of the author's account in days |
+| author_is_verified | integer | Binary indicator if author's email is verified (0/1) |
+| author_is_gold | integer | Binary indicator if author has Reddit Premium (0/1) |
+| comments_per_hour | float | Comment rate normalized by post age (num_comments / (post_age_hours + 1)) |
+| score_per_hour | float | Score rate normalized by post age (score / (post_age_hours + 1)) |
+| karma_to_age_ratio | float | Author's total karma divided by account age in days |
+| subreddit_size_log | float | log1p(subreddit_subscribers) |
+| author_karma_log | float | log1p(comment_karma + link_karma) |
+| virality_category | integer | Virality category (0=low <50, 1=medium 50–500, 2=high ≥500) |
 
----
+## Data Collection Methodology
 
-## Subreddits Included
+### Source
+Data was collected from the Reddit API using the PRAW (Python Reddit API Wrapper) library. The collection process involved:
 
-| Subreddit | Category | Posts |
-|---|---|---|
-| r/AskReddit | Q&A, text | 12 |
-| r/worldnews | News, links | 150 |
-| r/todayilearned | TIL format | 150 |
-| r/explainlikeimfive | ELI5 format | 150 |
-| r/dataisbeautiful | Data visualization | 150 |
-| r/personalfinance | Advice/discussion | 144 |
-| r/tifu | Story format | 150 |
-| r/science | Science links | 150 |
-| r/Showerthoughts | Short creative titles | 150 |
-| r/LifeProTips | Tips format | 150 |
-| r/learnpython | Technical/niche | 150 |
-| r/running | Hobby/niche | 150 |
+1. **Subreddit Selection**: Posts were collected from twelve subreddits spanning diverse content categories:
+   - AskReddit
+   - worldnews
+   - todayilearned
+   - explainlikeimfive
+   - dataisbeautiful
+   - personalfinance
+   - tifu
+   - science
+   - Showerthoughts
+   - LifeProTips
+   - learnpython
+   - running
 
-> **Note:** r/AskReddit yielded only 12 posts because its "hot" feed is dominated by very recent posts, most of which were filtered out by the 24-hour minimum age requirement.
+2. **Post Filtering**: Posts were filtered to include only those at least 24 hours old, ensuring scores had sufficient time to stabilize. Stickied moderator posts were excluded.
 
----
+3. **Data Enrichment**: For each post, the following data was collected:
+   - Post metadata (title, body, score, upvote ratio, comment count)
+   - Subreddit-level statistics (subscriber count, subreddit age)
+   - Author-level statistics (karma, account age, verification status)
+   - Timing information (hour, day of week, post age at collection)
 
-## Collection Methodology
+4. **Derived Metrics**: Additional features were calculated including:
+   - Comment and score rates normalized by post age
+   - Log-transformed follower and karma counts to reduce skew
+   - Author karma-to-age ratio as a proxy for account activity
+   - TF-IDF features extracted from post titles (50 components)
 
-Posts were collected from the **"hot" feed** of each subreddit using the PRAW Python library. The following filters were applied:
+5. **Virality Classification**: Posts were assigned to virality categories based on score thresholds: low (<50), medium (50–500), and high (≥500).
 
-- Posts must be **at least 24 hours old** to ensure scores had stabilized before collection
-- **Stickied moderator posts** were excluded
-- Up to **150 posts per subreddit** were collected
+## Potential Use Cases
+1. Post virality prediction and content strategy analysis
+2. Subreddit-specific performance benchmarking
+3. Optimal posting time identification
+4. Author reputation impact on post success
+5. Text feature analysis for title optimization
 
-Because data was sampled from the "hot" feed (which surfaces already-popular content), the dataset has an inherent **collection bias toward high-virality posts**. This should be accounted for in any analysis.
+## Data Preparation
+The dataset underwent the following preparation steps:
+1. Collection of raw metrics from the Reddit API
+2. Calculation of derived metrics (engagement rates, log transformations, ratios)
+3. Handling of missing values with appropriate defaults (deleted/suspended accounts set to zero)
+4. Feature engineering based on engagement and platform knowledge
+5. Virality categorization using score thresholds
 
----
-
-## Features
-
-### Identifiers
-| Column | Type | Description |
-|---|---|---|
-| `post_id` | string | Reddit post ID |
-| `title` | string | Post title text |
-| `subreddit` | string | Subreddit name |
-| `post_type` | string | `self` (text post) or `link` |
-
-### Target Variables
-| Column | Type | Description |
-|---|---|---|
-| `score` | int | Raw upvote score |
-| `log_score` | float | log1p(score) — primary regression target |
-| `virality_category` | int | 0=low (<50), 1=medium (50–500), 2=high (≥500) |
-
-### Engagement Features
-| Column | Type | Description |
-|---|---|---|
-| `num_comments` | int | Total number of comments |
-| `upvote_ratio` | float | Fraction of upvotes (0–1) |
-| `is_original_content` | int | 1 if marked OC |
-| `over_18` | int | 1 if NSFW |
-| `has_flair` | int | 1 if post has a flair tag |
-
-### Text Features
-| Column | Type | Description |
-|---|---|---|
-| `title_length` | int | Character count of title |
-| `title_word_count` | int | Word count of title |
-| `body_length` | int | Character count of post body |
-| `body_word_count` | int | Word count of post body |
-| `has_body` | int | 1 if post has a text body |
-| `num_question_marks` | int | Count of `?` in title + body |
-| `num_exclamations` | int | Count of `!` in title + body |
-| `num_urls` | int | Count of URLs in body |
-| `title_uppercase_ratio` | float | Fraction of uppercase characters in title |
-| `is_question_title` | int | 1 if title ends with `?` |
-
-### Timing Features
-| Column | Type | Description |
-|---|---|---|
-| `post_hour_utc` | int | Hour of posting (0–23, UTC) |
-| `post_day_of_week` | int | Day of week (0=Monday) |
-| `post_age_hours` | float | Hours between posting and collection |
-| `created_utc` | float | Unix timestamp of post creation |
-
-### Subreddit Features
-| Column | Type | Description |
-|---|---|---|
-| `subreddit_subscribers` | int | Subscriber count at collection time |
-| `subreddit_created_utc` | float | Unix timestamp of subreddit creation |
-| `subreddit_age_days` | float | Age of subreddit in days |
-| `subreddit_size_log` | float | log1p(subreddit_subscribers) |
-
-### Author Features
-| Column | Type | Description |
-|---|---|---|
-| `author_comment_karma` | int | Author's comment karma |
-| `author_link_karma` | int | Author's link karma |
-| `author_account_age_days` | float | Age of author account in days |
-| `author_is_verified` | int | 1 if email-verified account |
-| `author_is_gold` | int | 1 if Reddit Premium member |
-| `author_karma_log` | float | log1p(comment_karma + link_karma) |
-
-### Derived Features
-| Column | Type | Description |
-|---|---|---|
-| `comments_per_hour` | float | num_comments / (post_age_hours + 1) |
-| `score_per_hour` | float | score / (post_age_hours + 1) |
-| `karma_to_age_ratio` | float | total_karma / (account_age_days + 1) |
-| `title_body_ratio` | float | title_length / (body_length + 1) |
-
----
-
-## Virality Category Distribution
-
-| Category | Label | Score Range | Proportion |
-|---|---|---|---|
-| 0 | Low | < 50 | 41.9% |
-| 1 | Medium | 50–500 | 23.6% |
-| 2 | High | ≥ 500 | 34.5% |
-
-The skew toward low and high virality (and underrepresentation of medium) reflects the hot-feed collection bias.
+## Limitations
+- Collection bias: sampling from the "hot" feed overrepresents already-popular posts
+- Upvote ratio and comments per hour are collected at the same time as the score, creating potential leakage if used for prospective prediction
+- Growth dynamics are not captured — the dataset is a single snapshot per post
+- AskReddit is underrepresented (12 posts) due to the age filter removing most hot posts
+- Author karma values may be negative for shadowbanned or penalized accounts
